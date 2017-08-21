@@ -6,20 +6,12 @@ class Classifier:
     def knn(self, dataset):
 
         X = dataset.iloc[:, :-1].values
-        y = dataset.iloc[:, 3476].values
+        y = dataset.iloc[:, -1].values
+
 
         # Splitting the dataset into the Training set and Test set
         from sklearn.cross_validation import train_test_split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
-
-        # Feature Scaling
-        from sklearn.neighbors import KNeighborsClassifier
-        classifier = KNeighborsClassifier(n_neighbors=5, metric='minkowski', p=2)
-        classifier.fit(X_train, y_train)
-
-        # Splitting the dataset into the Training set and Test set
-        from sklearn.cross_validation import train_test_split
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 
         # Feature Scaling
         from sklearn.preprocessing import StandardScaler
@@ -27,11 +19,17 @@ class Classifier:
         X_train = sc.fit_transform(X_train)
         X_test = sc.transform(X_test)
 
+        # Feature Scaling
+        from sklearn.neighbors import KNeighborsClassifier
+        classifier = KNeighborsClassifier(n_neighbors=5, metric='minkowski', p=2)
+        classifier.fit(X_train, y_train)
+
+
         # Predicting the Test set results
         y_pred = classifier.predict(X_test)
 
-        print(y_pred)
-        print(y_test)
+        print("Test: %f", y_test)
+        print("Pred: %f", y_pred)
 
         # Making the Confusion Matrix
         from sklearn.metrics import confusion_matrix

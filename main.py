@@ -30,5 +30,5 @@ if __name__ == '__main__':
     features = list(features)
     save(features)
 
-    #c = Classifier()
-    #c.knn(read())
+    c = Classifier()
+    c.knn(read())

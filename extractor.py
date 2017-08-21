@@ -28,18 +28,16 @@ class Extractor:
         std = numpy.std(arr)
         var = numpy.var(arr)
 
-        l = len(arr)
-
-        return [mean, median, std, var]
+        return [mean]
 
     def mfcc_feature(self, path):
         mfcc, bank = self.mfcc_by_path(path)
 
+        mfcc = mfcc[1:400, :]
+
         summaries = map(self.summary, mfcc)
         summaries = list(summaries)
         flatten = [y for x in summaries for y in x]
-
-        l = len(flatten)
 
         return flatten
 
@@ -53,14 +51,16 @@ class Extractor:
         import scipy.io.wavfile as wav
 
         (rate, sig) = wav.read(path)
-        mfcc_feat = mfcc(sig, rate)
-        d_mfcc_feat = delta(mfcc_feat, 2)
-        fbank_feat = logfbank(sig, rate)
+        mfcc_feat = mfcc(sig, rate, nfft=1200)
+        #d_mfcc_feat = delta(mfcc_feat, 2)
+        #fbank_feat = logfbank(sig, rate)
 
-        summaries = map(self.summary, fbank_feat)
+        mfcc_feat = mfcc_feat[1:300, :]
+
+        summaries = map(self.summary, mfcc_feat)
         flatten = [y for x in summaries for y in x]
 
-        print(fbank_feat[1:3, :])
+        #print(mfcc_feat[1:3, :])
 
         return flatten
 
