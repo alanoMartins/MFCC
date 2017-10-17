@@ -12,10 +12,11 @@ class MFCC_Sanderson:
     def execute(self, signal, rate):
         # signal = self.apply_pre_emphasis(signal)
         frames = self.framing(signal, rate)
-        f = self.fourier_transform(frames)
-        filters = self.filters(f, self.banks(rate))
-        mfcc = self.mfcc(filters)
-        return mfcc
+        fourier = self.fourier_transform(frames)
+        banks = self.fbanks(self.normilize(fourier[0]))
+        # filters = self.filters(f, self.banks(rate))
+        # mfcc = self.mfcc(filters)
+        return 0
 
     def execute_by_path(self, path):
         rate, signal = scipy.io.wavfile.read(path)
@@ -60,7 +61,7 @@ class MFCC_Sanderson:
         return self.normilize(mag_frames)
 
     def normilize(self, arr):
-        arr -= (np.mean(arr, axis=0) + 1e-8)
+        arr = [(1 / len(arr) * v ** 2) for v in arr]
         return arr
 
     def filters(self, power, fbank):
@@ -73,6 +74,38 @@ class MFCC_Sanderson:
     def mfcc(self, filters):
         # num_ceps = 12
         return dct(filters, type=2, axis=1, norm='ortho') # [:, 1: (num_ceps + 1)]
+
+    def single_filter(self, value, initial, center, final):
+        if value < initial or value > final:
+            return 0
+        elif value < center:
+            return (value - initial) / (center - initial)
+        else:
+            return (final - value) / (final - center)
+
+    def function_filter(self, initial, center, final):
+        return lambda x: self.single_filter(x, initial, center, final)
+
+    def fbanks(self, freqs):
+        centers = [300, 400, 500, 600, 700, 800, 900, 1000, 1149, 1320, 1516, 1741, 2000, 2297, 2639, 3031, 3482]
+        initial = 200
+        final = 4000
+
+        filters = []
+        for i in range(0, len(centers)):
+            if i == 0:
+                filters.append(self.function_filter(initial, centers[i], centers[i + 1]))
+            elif i == len(centers) - 1:
+                filters.append(self.function_filter(centers[i- 1], centers[i], final))
+            else:
+                filters.append(self.function_filter(centers[i - 1], centers[i], centers[i + 1]))
+
+        banks = []
+        for f in filters:
+            banks.append([f(fr) for fr in freqs])
+
+        return banks
+
 
     def banks(self, rate):
         low_freq_mel = 0
