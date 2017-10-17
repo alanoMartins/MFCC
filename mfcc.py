@@ -24,13 +24,14 @@ class MFCC:
         return numpy.append(signal[0], signal[1:] - pre_emphasis * signal[:-1])
 
     def framing(self, emphasized_signal, rate):
-        frame_size = 0.025
+        frame_size = 0.020
         frame_stride = 0.01
 
         frame_length, frame_step = frame_size * rate, frame_stride * rate  # Convert from seconds to samples
         signal_length = len(emphasized_signal)
         frame_length = int(round(frame_length))
         frame_step = int(round(frame_step))
+        # (Wt - Ws + Wd) / Wd -----> Formula para numeros de frame
         num_frames = int(numpy.ceil(
             float(numpy.abs(signal_length - frame_length)) / frame_step))  # Make sure that we have at least 1 frame
 

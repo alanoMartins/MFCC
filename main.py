@@ -16,13 +16,13 @@ def read():
 
 def build_row(path):
     result = 1 if 'alano' in path else 0
-    arr = extractor.mfcc_feature(path)
+    arr = extractor.mfcc(path)
 #    arr = extractor.feature_lib(path)
     return tuple(arr) + (result,)
 
 
 if __name__ == '__main__':
-    extractor = Extractor('MFCC')
+    extractor = Extractor('sanderson')
 
     files = next(os.walk(SAMPLE_DIR))[2]
     files = list(files)

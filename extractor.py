@@ -1,4 +1,5 @@
 from mfcc import MFCC
+from mfcc_sanderson import MFCC_Sanderson
 import matplotlib.pyplot as plt
 import numpy
 from python_speech_features import mfcc
@@ -11,7 +12,9 @@ class Extractor:
     DEBUG = False
 
     def __init__(self, extractor):
-        if extractor != '':
+        if extractor == 'sanderson':
+            self.extractor = MFCC_Sanderson()
+        elif extractor != '':
             self.extractor = MFCC()
         else:
             raise Exception('Define a extractor')
@@ -19,27 +22,27 @@ class Extractor:
     def mfcc(self, signal, rate):
         return self.extractor.execute(signal, rate)
 
-    def mfcc_by_path(self, path):
+    def mfcc(self, path):
         return self.extractor.execute_by_path(path)
 
-    def summary(self, arr):
-        mean = numpy.mean(arr)
-        median = numpy.median(arr)
-        std = numpy.std(arr)
-        var = numpy.var(arr)
-
-        return [mean]
-
-    def mfcc_feature(self, path):
-        mfcc, bank = self.mfcc_by_path(path)
-
-        mfcc = mfcc[1:400, :]
-
-        summaries = map(self.summary, mfcc)
-        summaries = list(summaries)
-        flatten = [y for x in summaries for y in x]
-
-        return flatten
+    # def summary(self, arr):
+    #     mean = numpy.mean(arr)
+    #     median = numpy.median(arr)
+    #     std = numpy.std(arr)
+    #     var = numpy.var(arr)
+    #
+    #     return [mean]
+    #
+    # def mfcc_feature(self, path):
+    #     mfcc, bank = self.mfcc_by_path(path)
+    #
+    #     mfcc = mfcc[1:400, :]
+    #
+    #     summaries = map(self.summary, mfcc)
+    #     summaries = list(summaries)
+    #     flatten = [y for x in summaries for y in x]
+    #
+    #     return flatten
 
     def plot(self, arr):
 
