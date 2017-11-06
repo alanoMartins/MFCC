@@ -1,22 +1,30 @@
 import numpy as np
 import scipy.io.wavfile
 from scipy.fftpack import dct
+import matplotlib.pyplot as plt
 
 
 class MFCC_Sanderson:
 
     def __init__(self):
         self.num_filters = 40
-        self.nfft = 2048
+        self.nfft = 512
 
     def execute(self, signal, rate):
         # signal = self.apply_pre_emphasis(signal)
+        self.rate = rate
         frames = self.framing(signal, rate)
-        fourier = self.fourier_transform(frames)
-        banks = self.fbanks(self.normilize(fourier[0]))
+        fast_fourier = self.stff(signal, rate)
+        banks_alt = self.filter_banks(signal, rate)
+        mfcc = self.mfcc(banks_alt)
+        frames_fourier = self.fourier_transform_sanderson(frames)
+        #fourier = self.fourier_transform(frames, rate)
+        banks = self.fbanks(frames_fourier[0])
+
+
         # filters = self.filters(f, self.banks(rate))
         # mfcc = self.mfcc(filters)
-        return 0
+        return mfcc
 
     def execute_by_path(self, path):
         rate, signal = scipy.io.wavfile.read(path)
@@ -55,10 +63,49 @@ class MFCC_Sanderson:
         frames *= np.hamming(frame_size)
         return frames
 
-    def fourier_transform(self, frames):
+    def fourier_transform(self, frames, rate):
+        self.plotFFT(frames[0], rate)
         mag_frames = np.absolute(np.fft.fft(frames, self.nfft))
+
         # Deve normalizar
         return self.normilize(mag_frames)
+
+    def fourier_transform_sanderson(self, frames):
+        Y = np.fft.rfft(frames, self.nfft)
+        Z = abs(Y)
+        NUP = int(np.ceil((len(Y) + 1) / 2))
+        Z = Z[0:NUP]
+        f = self.rate * np.linspace(-0.5, 0.5, NUP)
+        #plt.plot(f, Z)
+        #plt.show()
+
+        NFFT = 512
+
+        mag_frames = np.absolute(np.fft.rfft(frames, NFFT))  # Magnitude of the FFT
+        pow_frames = ((1.0 / NFFT) * (mag_frames ** 2))  # Power Spectrum
+
+        pow_frames_sanderson =  ((1.0 / NFFT) * ((Z) ** 2))
+
+
+        return pow_frames_sanderson
+
+
+    def plotFFT(self, frame, rate):
+        Ws = 0.020
+        Ns = Ws * rate
+        lin = np.linspace(0, 1, Ns)
+        plt.plot(lin, frame)
+        plt.show()
+        b = 512
+        Y = np.fft.fft(frame, self.nfft) / len(frame)
+        Z = abs(Y)
+        NUP = int(np.ceil((len(Y) + 1) / 2))
+        Z = Z[0:NUP]
+        f = rate * np.linspace(-0.5, 0.5, NUP)
+        plt.plot(f, Z)
+        plt.show()
+
+
 
     def normilize(self, arr):
         arr = [(1 / len(arr) * v ** 2) for v in arr]
@@ -71,9 +118,11 @@ class MFCC_Sanderson:
         filter_banks = np.where(filter_banks == 0, np.finfo(float).eps, filter_banks)
         return np.log10(filter_banks)
 
-    def mfcc(self, filters):
+    def mfcc_sanderson(self, filters):
         # num_ceps = 12
         return dct(filters, type=2, axis=1, norm='ortho') # [:, 1: (num_ceps + 1)]
+
+
 
     def single_filter(self, value, initial, center, final):
         if value < initial or value > final:
@@ -87,9 +136,15 @@ class MFCC_Sanderson:
         return lambda x: self.single_filter(x, initial, center, final)
 
     def fbanks(self, freqs):
+        hz_points = lambda x: (2595 * np.log10(1 + (x / 2) / 700))
+
         centers = [300, 400, 500, 600, 700, 800, 900, 1000, 1149, 1320, 1516, 1741, 2000, 2297, 2639, 3031, 3482]
-        initial = 200
-        final = 4000
+        initial = hz_points(200)
+        final = hz_points(4000)
+
+
+
+        centers = list(map(hz_points, centers))
 
         filters = []
         for i in range(0, len(centers)):
@@ -106,16 +161,29 @@ class MFCC_Sanderson:
 
         return banks
 
+        # Short time fourier transform
+    def stff(self, signal, rate):
+        NFFT = 512
 
-    def banks(self, rate):
+        frames = self.framing(signal, rate)
+        mag_frames = np.absolute(np.fft.rfft(frames, NFFT))  # Magnitude of the FFT
+        pow_frames = ((1.0 / NFFT) * (mag_frames ** 2))  # Power Spectrum
+
+        return mag_frames, pow_frames
+
+
+    def filter_banks(self, signal, rate):
+        NFFT = 512
+        nfilt = 40
+
         low_freq_mel = 0
         high_freq_mel = (2595 * np.log10(1 + (rate / 2) / 700))  # Convert Hz to Mel
-        mel_points = np.linspace(low_freq_mel, high_freq_mel, self.num_filters + 2)  # Equally spaced in Mel scale
+        mel_points = np.linspace(low_freq_mel, high_freq_mel, nfilt + 2)  # Equally spaced in Mel scale
         hz_points = (700 * (10 ** (mel_points / 2595) - 1))  # Convert Mel to Hz
-        bin = np.floor((self.nfft + 1) * hz_points / rate)
+        bin = np.floor((NFFT + 1) * hz_points / rate)
 
-        fbank = np.zeros((self.num_filters, int(np.floor(self.nfft / 2 + 1))))
-        for m in range(1, self.num_filters + 1):
+        fbank = np.zeros((nfilt, int(np.floor(NFFT / 2 + 1))))
+        for m in range(1, nfilt + 1):
             f_m_minus = int(bin[m - 1])  # left
             f_m = int(bin[m])  # center
             f_m_plus = int(bin[m + 1])  # right
@@ -125,4 +193,18 @@ class MFCC_Sanderson:
             for k in range(f_m, f_m_plus):
                 fbank[m - 1, k] = (bin[m + 1] - k) / (bin[m + 1] - bin[m])
 
-        return fbank
+        mag_frames, pow_frames = self.stff(signal, rate)
+        filter_banks = np.dot(pow_frames, fbank.T)
+        filter_banks = np.where(filter_banks == 0, np.finfo(float).eps, filter_banks)  # Numerical Stability
+        return 20 * np.log10(filter_banks)
+
+    def mfcc(self, filter_banks):
+        num_ceps = 12
+        cep_lifter = 22
+
+        mfcc = dct(filter_banks, type=2, axis=1, norm='ortho')[:, 1: (num_ceps + 1)]  # Keep 2-13
+        (nframes, ncoeff) = mfcc.shape
+        n = np.arange(ncoeff)
+        lift = 1 + (cep_lifter / 2) * np.sin(np.pi * n / cep_lifter)
+        mfcc *= lift  # *
+        return mfcc
