@@ -34,11 +34,11 @@ class Extractor:
         import scipy.io.wavfile as wav
 
         (rate, sig) = wav.read(path)
-        mfcc_feat = mfcc(sig, rate, nfft=512, nfilt=17, ceplifter=12)
+        mfcc_feat = mfcc(sig, rate, nfft=2048, nfilt=17, ceplifter=12)
         #d_mfcc_feat = delta(mfcc_feat, 2)
         #fbank_feat = logfbank(sig, rate)
 
-        mfcc_feat = mfcc_feat[1:300, :]
+
 
 
 

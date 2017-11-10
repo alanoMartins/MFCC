@@ -1,6 +1,7 @@
 import os.path
 import pandas as pd
 from classifier import Classifier
+import numpy as np
 
 from extractor import Extractor
 
@@ -15,10 +16,19 @@ def read():
     return pd.read_csv('output/feature.csv')
 
 def build_row(path):
-    result = 1 if 'alano' in path else 0
-    arr = extractor.mfcc(path)
-    arr1 = extractor.feature_lib(path)
-    return tuple(arr) + (result,)
+    #result = 1 if 'alano' in path else 0
+    result = -1
+    if 's1' in path:
+        result = 0
+    if 's2' in path:
+        result = 1
+    if 's3' in path:
+        result = 2
+
+    arr = extractor.mfcc(path).flatten()
+    #arr = extractor.feature_lib(path).flatten()
+    arr = np.insert(arr, 0, result, axis=0)
+    return arr
 
 
 if __name__ == '__main__':

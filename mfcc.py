@@ -8,7 +8,7 @@ class MFCC_Sanderson:
 
     def __init__(self):
         self.num_filters = 40
-        self.nfft = 512
+        self.nfft = 2048
         self.cep = 12
         self.debug = False
 
