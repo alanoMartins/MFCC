@@ -2,6 +2,8 @@ import numpy as np
 import scipy.io.wavfile
 from scipy.fftpack import dct
 import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set()
 
 
 class MFCC_Sanderson:
@@ -134,5 +136,6 @@ class MFCC_Sanderson:
         (nframes, ncoeff) = mfcc.shape
         n = np.arange(ncoeff)
         lift = 1 + (cep_lifter / 2) * np.sin(np.pi * n / cep_lifter)
-        mfcc *= lift  # *
+        mfcc *= lift
+        plt.show()
         return mfcc

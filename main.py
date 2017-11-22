@@ -25,8 +25,8 @@ def build_row(path):
     if 's3' in path:
         result = 2
 
-    arr = extractor.mfcc(path).flatten()
-    #arr = extractor.feature_lib(path).flatten()
+    #arr = extractor.mfcc(path).flatten()
+    arr = extractor.feature_lib(path).flatten()
     arr = np.insert(arr, 0, result, axis=0)
     return arr
 
