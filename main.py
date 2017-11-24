@@ -17,16 +17,13 @@ def read():
 
 def build_row(path):
     #result = 1 if 'alano' in path else 0
-    result = -1
-    if 's1' in path:
-        result = 0
-    if 's2' in path:
-        result = 1
-    if 's3' in path:
-        result = 2
+    filename = path.split('/')[1]
+    r = filename[filename.find('s')+1:filename.rfind('_')]
+    result = int(r)
 
-    #arr = extractor.mfcc(path).flatten()
-    arr = extractor.feature_lib(path).flatten()
+
+    arr = extractor.mfcc(path).flatten()
+    #arr = extractor.feature_lib(path).flatten()
     arr = np.insert(arr, 0, result, axis=0)
     return arr
 
