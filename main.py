@@ -16,7 +16,6 @@ def read():
     return pd.read_csv('output/feature.csv')
 
 def build_row(path):
-    #result = 1 if 'alano' in path else 0
     filename = path.split('/')[1]
     r = filename[filename.find('s')+1:filename.rfind('_')]
     result = int(r)
