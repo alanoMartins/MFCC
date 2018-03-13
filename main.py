@@ -9,8 +9,8 @@ SAMPLE_DIR = 'samples/'
 
 
 def save(features):
-    df = pd.DataFrame(features)
-    df.to_csv('output/feature.csv')
+    df = pd.DataFrame(features).groupby(0)
+    df.to_csv('output/feature.csv', index=False, header=False)
 
 def read():
     return pd.read_csv('output/feature.csv')
@@ -21,9 +21,9 @@ def build_row(path):
     result = int(r)
 
 
-    arr = extractor.mfcc(path).flatten()
-    #arr = extractor.feature_lib(path).flatten()
-    arr = np.insert(arr, 0, result, axis=0)
+    #arr = extractor.mfcc(path)
+    arr = extractor.feature_lib(path)
+    arr = [np.insert(a, 0, int(result), axis=0) for a in arr]
     return arr
 
 
